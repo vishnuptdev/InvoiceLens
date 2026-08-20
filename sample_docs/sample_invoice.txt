@@ -1,0 +1,17 @@
+Acme Robotics Inc.
+123 Innovation Way, Springfield, IL
+
+Invoice Number: INV-10234
+Invoice Date: 03/14/2026
+Due Date: 04/13/2026
+
+Bill To: Contoso Widgets LLC
+
+Description                     Qty     Unit Price    Amount    
+Widget assembly (Model X)       10      $45.00        $450.00    
+Custom bracket fabrication      4       $120.00       $480.00    
+Rush shipping fee               1       $75.50        $75.50     
+
+Total: $1,005.50
+
+Thank you for your business!
