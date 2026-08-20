@@ -1,9 +1,13 @@
+import json
 import os
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
 
 from app.extraction import (
+    AnthropicExtractor,
     ExtractionError,
     HeuristicExtractor,
     _clean_numeric,
@@ -22,6 +26,62 @@ def test_get_extractor_defaults_to_heuristic(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     backend = get_extractor()
     assert isinstance(backend, HeuristicExtractor)
+
+
+def _fake_anthropic_response(payload: dict):
+    return SimpleNamespace(content=[SimpleNamespace(text=json.dumps(payload))])
+
+
+def test_get_extractor_returns_anthropic_when_key_set(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    with patch("anthropic.Anthropic") as mock_ctor:
+        mock_ctor.return_value = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: None))
+        backend = get_extractor()
+    assert isinstance(backend, AnthropicExtractor)
+
+
+def test_anthropic_extractor_parses_json_and_clamps_confidence(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    payload = {
+        "vendor_name": "Acme Inc.",
+        "invoice_number": "INV-1",
+        "invoice_date": "01/01/2026",
+        "due_date": None,
+        "total_amount": 100.0,
+        "currency": "USD",
+        "line_items": [],
+        "confidence": {"vendor_name": 1.4, "invoice_number": -0.2, "total_amount": 0.75},
+    }
+    with patch("anthropic.Anthropic") as mock_ctor:
+        mock_ctor.return_value = SimpleNamespace(
+            messages=SimpleNamespace(create=lambda **kw: _fake_anthropic_response(payload))
+        )
+        extractor = AnthropicExtractor(api_key="test-key-not-real")
+        candidate, confidence = extractor.extract("some invoice text")
+
+    assert candidate["vendor_name"] == "Acme Inc."
+    assert "confidence" not in candidate  # popped out of the candidate dict
+    assert confidence["vendor_name"] == 1.0  # clamped from 1.4
+    assert confidence["invoice_number"] == 0.0  # clamped from -0.2
+    assert confidence["total_amount"] == 0.75
+    assert confidence["currency"] == 0.5  # defaulted, model didn't report one
+
+
+def test_anthropic_extractor_strips_markdown_fences(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    payload = {
+        "vendor_name": "Acme Inc.", "invoice_number": None, "invoice_date": None,
+        "due_date": None, "total_amount": None, "currency": "USD", "line_items": [],
+    }
+    fenced_text = "```json\n" + json.dumps(payload) + "\n```"
+    with patch("anthropic.Anthropic") as mock_ctor:
+        mock_ctor.return_value = SimpleNamespace(
+            messages=SimpleNamespace(create=lambda **kw: SimpleNamespace(content=[SimpleNamespace(text=fenced_text)]))
+        )
+        extractor = AnthropicExtractor(api_key="test-key-not-real")
+        candidate, _ = extractor.extract("some invoice text")
+
+    assert candidate["vendor_name"] == "Acme Inc."
 
 
 def test_clean_numeric_strips_currency_and_commas():

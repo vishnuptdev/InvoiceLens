@@ -109,10 +109,12 @@ service is running.
 python3 -m pytest -q
 ```
 
-21 tests cover: parsing all three formats (PDF/DOCX/TXT), Pydantic model
+24 tests cover: parsing all three formats (PDF/DOCX/TXT), Pydantic model
 validation (including out-of-range confidence rejection), the retry-on-
 invalid-schema loop (both the repair-succeeds and repair-exhausted paths),
-the heuristic extractor's field confidence scoring, and the full FastAPI
+the heuristic extractor's field confidence scoring, the `AnthropicExtractor`
+path with a mocked `anthropic.Anthropic` client (JSON parsing, markdown-fence
+stripping, confidence clamping/defaulting), and the full FastAPI
 request/response cycle (upload -> extract -> fetch, 404s, and rejected
 uploads).
 

@@ -61,7 +61,11 @@ demonstrated working end-to-end on all three sample formats including a
 genuine retry-and-repair cycle, and (b) the `AnthropicExtractor` code path
 (prompting for the same JSON shape plus self-reported confidence) is
 complete and would take over field coverage entirely once a key is
-configured — nothing else in the pipeline would need to change.
+configured — nothing else in the pipeline would need to change. This path
+is unit-tested too, not just written and left unexercised:
+`tests/test_extraction.py` patches `anthropic.Anthropic` to confirm `get_extractor()`
+selects it when a key is set, and that its JSON-parsing, markdown-fence
+stripping, and confidence clamping/defaulting all behave correctly.
 
 ## Retry-on-invalid-schema loop: how it's genuinely exercised
 
