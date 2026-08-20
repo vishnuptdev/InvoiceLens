@@ -4,6 +4,27 @@ Autonomous build log and design-decision record (task requested no
 clarifying questions; decisions below were made unilaterally and documented
 here per the task's instructions).
 
+## Environment check (performed before starting)
+
+- **API keys**: `ANTHROPIC_API_KEY` not set. `OPENAI_API_KEY` not set.
+- **Language toolchains**: Python 3.11.15, pip 24.0, Node v22.22.2, npm
+  10.9.7, git 2.43.0 — all present.
+- **Network access**: allowlisted, not open internet. `pypi.org` → HTTP 200
+  (package installs confirmed working: `fastapi`, `pdfplumber`,
+  `python-docx`, `reportlab`, `anthropic`, `pytest`, etc. all installed
+  cleanly via pip). `api.anthropic.com` → HTTP 404 (reachable at the
+  network level; 404 is just "no route at `/`", not an auth result).
+  `api.openai.com` and a generic external host (`example.com`) both failed
+  to connect — general internet is not reachable, only specific allowlisted
+  hosts (package registries, the Anthropic API host).
+- **Consequence**: no live LLM key is available here, so extraction defaults
+  to a deterministic offline `HeuristicExtractor` (regex/rule-based, does
+  real work — not a stub) and switches to `AnthropicExtractor` automatically
+  once `ANTHROPIC_API_KEY` is set, with no code changes needed. **The
+  heuristic backend is what ran for every test and every example in this
+  NOTES.md and the README**, confirmed by `ExtractionResult.backend ==
+  "heuristic-v1"` in every test assertion and API response shown below.
+
 ## Document type: invoice
 
 The brief said "structured data from messy documents/PDFs" without naming a
