@@ -36,6 +36,11 @@ class ExtractionResult(BaseModel):
     backend: str
     attempts: int
     warnings: List[str] = Field(default_factory=list)
+    # Where the extracted content came from: "pdf-text" | "docx" | "txt" |
+    # "ocr" (local OCR) | "image" (no text at all) | "vision" (the model read
+    # the page images). Defaults to "text" for text-only callers.
+    text_source: str = "text"
+    ocr_engine: Optional[str] = None
 
 
 class DocumentMetadata(BaseModel):

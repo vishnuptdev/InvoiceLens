@@ -1,6 +1,36 @@
+# --- Python ---
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
 *.egg-info/
+.pytest_cache/
+
+# --- Virtual environments ---
 .venv/
 venv/
+env/
+
+# --- Secrets / env (NEVER commit) ---
+.env
+.env.*
+!.env.example
+
+# --- AI / editor tooling (contains API tokens, local settings) ---
+.claude/
+.kilo/
+.qoder/
+.vscode/
+.idea/
+
+# --- Vercel / build output ---
+.vercel/
+dist/
+build/
+
+# --- Frontend (node) ---
+node_modules/
+npm-debug.log*
+
+# --- Local run artifacts / uploads ---
+uploads/
+invoicelens-uploads/
+*.log

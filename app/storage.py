@@ -20,6 +20,10 @@ class StoredDocument:
     file_path: str
     text: str
     extraction: Optional[ExtractionResult] = None
+    # parsing.ParsedDocument for this upload: where the text came from, the OCR
+    # engine/score, and any page images (needed to re-extract an image or a
+    # scanned PDF through the vision backend).
+    parsed: Optional[object] = None
 
 
 class DocumentStore:
@@ -27,9 +31,10 @@ class DocumentStore:
         self._docs: Dict[str, StoredDocument] = {}
         self._lock = threading.Lock()
 
-    def add(self, filename: str, file_path: str, text: str) -> StoredDocument:
+    def add(self, filename: str, file_path: str, text: str, parsed=None) -> StoredDocument:
         document_id = uuid.uuid4().hex[:12]
-        doc = StoredDocument(document_id=document_id, filename=filename, file_path=file_path, text=text)
+        doc = StoredDocument(document_id=document_id, filename=filename, file_path=file_path,
+                             text=text, parsed=parsed)
         with self._lock:
             self._docs[document_id] = doc
         return doc

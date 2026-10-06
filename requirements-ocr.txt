@@ -1,0 +1,15 @@
+# Optional local-OCR extras for reading images and scanned PDFs offline.
+# Kept out of requirements.txt on purpose: these wheels (opencv, onnxruntime,
+# numpy, ~200MB unpacked) are far too heavy for a Vercel/Lambda layer, and the
+# deployed app uses the vision backend for images instead.
+#
+#   .venv\Scripts\pip install -r requirements-ocr.txt
+#
+# Nothing here is imported at startup - app/ocr.py detects the engines lazily,
+# so the app runs unchanged with or without them installed.
+rapidocr-onnxruntime>=1.4
+
+# Alternative engine: pip-installable wrapper, but it needs the Tesseract
+# binary on PATH (Windows: UB-Mannheim installer, or `choco install tesseract`).
+# Uncomment to use it; app/ocr.py prefers RapidOCR when both are present.
+# pytesseract>=0.3
